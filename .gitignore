@@ -1,0 +1,17 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Cloudflare / Vercel / Netlify
+.wrangler/
+.vercel/
+.netlify/
+
+# Local env
+.env
+.env.local

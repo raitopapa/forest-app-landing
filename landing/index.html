@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>森林記録 | 現場で動く林業向け Web アプリ（ベータ）</title>
+<meta name="description" content="紙とバインダーの林業記録を、ブラウザだけで完結させる。インストール不要・オフライン対応・PDF帳票出力。個人林家から森林組合まで。" />
+<meta property="og:title" content="森林記録 | 現場で動く林業向け Web アプリ" />
+<meta property="og:description" content="紙とバインダーを卒業。URL を開くだけで現場の作業日誌・立木記録・PDF帳票がそろう、林業向けWebアプリ。" />
+<meta property="og:type" content="website" />
+<style>
+  :root {
+    --green-900: #1f3a23;
+    --green-700: #2e5b33;
+    --green-600: #3f7547;
+    --green-500: #4a8a53;
+    --green-100: #e8eedf;
+    --green-50: #f3f7ee;
+    --earth-800: #3d2f1f;
+    --earth-500: #8b6c44;
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-mute: #7a7a7a;
+    --bg: #faf9f5;
+    --card: #ffffff;
+    --border: #e3dfd5;
+    --shadow: 0 2px 20px rgba(31, 58, 35, 0.06);
+    --radius: 12px;
+    --font-jp: "Hiragino Sans", "ヒラギノ角ゴシック", "Yu Gothic", "游ゴシック",
+      "Meiryo", "メイリオ", -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-jp);
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  a {
+    color: var(--green-700);
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ---- Header ---- */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(250, 249, 245, 0.92);
+    backdrop-filter: saturate(180%) blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  header .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+  header .logo {
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--green-900);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  header nav {
+    display: flex;
+    gap: 28px;
+    font-size: 15px;
+  }
+  header nav a {
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+  header .cta-btn {
+    background: var(--green-700);
+    color: white;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  header .cta-btn:hover {
+    background: var(--green-900);
+    text-decoration: none;
+  }
+  @media (max-width: 700px) {
+    header nav {
+      display: none;
+    }
+  }
+
+  /* ---- Hero ---- */
+  .hero {
+    padding: 88px 0 72px;
+    background: linear-gradient(180deg, var(--green-50) 0%, var(--bg) 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(74, 138, 83, 0.08), transparent 70%);
+    pointer-events: none;
+  }
+  .hero .badge {
+    display: inline-block;
+    background: white;
+    color: var(--green-700);
+    padding: 6px 14px;
+    border: 1px solid var(--green-100);
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    margin: 0 0 24px;
+    font-size: 44px;
+    line-height: 1.35;
+    font-weight: 700;
+    color: var(--green-900);
+    letter-spacing: -0.02em;
+  }
+  .hero .lead {
+    font-size: 18px;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+    max-width: 640px;
+    line-height: 1.8;
+  }
+  .hero .cta-group {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .btn-primary {
+    display: inline-block;
+    background: var(--green-700);
+    color: white;
+    padding: 16px 32px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: 0 4px 12px rgba(46, 91, 51, 0.2);
+  }
+  .btn-primary:hover {
+    background: var(--green-900);
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+  .btn-secondary {
+    display: inline-block;
+    background: white;
+    color: var(--green-700);
+    padding: 15px 28px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    border: 1px solid var(--green-100);
+    transition: border-color 0.2s;
+  }
+  .btn-secondary:hover {
+    border-color: var(--green-500);
+    text-decoration: none;
+  }
+  .hero-note {
+    margin-top: 24px;
+    font-size: 14px;
+    color: var(--ink-mute);
+  }
+  @media (max-width: 700px) {
+    .hero {
+      padding: 56px 0 48px;
+    }
+    .hero h1 {
+      font-size: 30px;
+    }
+    .hero .lead {
+      font-size: 16px;
+    }
+    .btn-primary,
+    .btn-secondary {
+      width: 100%;
+      text-align: center;
+    }
+  }
+
+  /* ---- Section base ---- */
+  section {
+    padding: 80px 0;
+  }
+  section.alt {
+    background: var(--card);
+  }
+  h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--green-900);
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+  }
+  .section-lead {
+    font-size: 17px;
+    color: var(--ink-soft);
+    margin: 0 0 48px;
+    max-width: 680px;
+  }
+  @media (max-width: 700px) {
+    section {
+      padding: 56px 0;
+    }
+    h2 {
+      font-size: 24px;
+    }
+    .section-lead {
+      font-size: 15px;
+      margin-bottom: 36px;
+    }
+  }
+
+  /* ---- Problem section ---- */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .problem-card {
+    padding: 28px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  section.alt .problem-card {
+    background: var(--green-50);
+    border-color: var(--green-100);
+  }
+  .problem-card .emoji {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+  .problem-card h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    color: var(--green-900);
+  }
+  .problem-card p {
+    margin: 0;
+    font-size: 15px;
+    color: var(--ink-soft);
+  }
+
+  /* ---- Features ---- */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+  }
+  .feature-card {
+    padding: 28px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .feature-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+  .feature-card .icon {
+    display: inline-flex;
+    width: 48px;
+    height: 48px;
+    align-items: center;
+    justify-content: center;
+    background: var(--green-100);
+    border-radius: 10px;
+    margin-bottom: 16px;
+    font-size: 22px;
+  }
+  .feature-card h3 {
+    margin: 0 0 10px;
+    font-size: 18px;
+    color: var(--green-900);
+  }
+  .feature-card p {
+    margin: 0;
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+
+  /* ---- How it works ---- */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    counter-reset: step;
+  }
+  .step {
+    padding: 28px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    position: relative;
+    counter-increment: step;
+  }
+  .step::before {
+    content: counter(step);
+    position: absolute;
+    top: -14px;
+    left: 24px;
+    width: 32px;
+    height: 32px;
+    background: var(--green-700);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .step h3 {
+    margin: 12px 0 8px;
+    font-size: 17px;
+    color: var(--green-900);
+  }
+  .step p {
+    margin: 0;
+    font-size: 15px;
+    color: var(--ink-soft);
+  }
+
+  /* ---- Pricing ---- */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
+  .plan {
+    padding: 32px 28px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+  }
+  .plan.popular {
+    border: 2px solid var(--green-700);
+    position: relative;
+  }
+  .plan.popular::before {
+    content: "おすすめ";
+    position: absolute;
+    top: -12px;
+    right: 20px;
+    background: var(--green-700);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .plan h3 {
+    margin: 0 0 4px;
+    font-size: 20px;
+    color: var(--green-900);
+  }
+  .plan .price {
+    margin: 12px 0 20px;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .plan .price small {
+    font-size: 15px;
+    color: var(--ink-mute);
+    font-weight: 400;
+  }
+  .plan .target {
+    font-size: 13px;
+    color: var(--ink-mute);
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .plan ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 24px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    flex-grow: 1;
+  }
+  .plan ul li {
+    padding: 6px 0;
+    position: relative;
+    padding-left: 22px;
+  }
+  .plan ul li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--green-600);
+    font-weight: 700;
+  }
+
+  /* ---- FAQ ---- */
+  .faq-list {
+    max-width: 740px;
+  }
+  details {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  details summary {
+    font-weight: 600;
+    color: var(--green-900);
+    cursor: pointer;
+    list-style: none;
+    position: relative;
+    padding-right: 32px;
+    font-size: 16px;
+  }
+  details summary::-webkit-details-marker {
+    display: none;
+  }
+  details summary::after {
+    content: "＋";
+    position: absolute;
+    right: 0;
+    top: 0;
+    color: var(--green-700);
+    font-weight: 400;
+    transition: transform 0.2s;
+  }
+  details[open] summary::after {
+    content: "−";
+  }
+  details p {
+    margin: 12px 0 0;
+    color: var(--ink-soft);
+    font-size: 15px;
+    line-height: 1.8;
+  }
+
+  /* ---- Signup form ---- */
+  .signup {
+    background: linear-gradient(135deg, var(--green-700), var(--green-900));
+    color: white;
+    padding: 80px 0;
+    text-align: center;
+  }
+  .signup h2 {
+    color: white;
+    margin-bottom: 16px;
+  }
+  .signup .section-lead {
+    color: rgba(255, 255, 255, 0.85);
+    margin: 0 auto 32px;
+  }
+  .signup-form {
+    max-width: 480px;
+    margin: 0 auto;
+    background: white;
+    padding: 32px;
+    border-radius: var(--radius);
+    color: var(--ink);
+    text-align: left;
+  }
+  .signup-form label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--green-900);
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+  .signup-form label:first-of-type {
+    margin-top: 0;
+  }
+  .signup-form input,
+  .signup-form select,
+  .signup-form textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--bg);
+    color: var(--ink);
+    transition: border-color 0.2s;
+  }
+  .signup-form input:focus,
+  .signup-form select:focus,
+  .signup-form textarea:focus {
+    outline: none;
+    border-color: var(--green-500);
+  }
+  .signup-form textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  .signup-form button {
+    margin-top: 24px;
+    width: 100%;
+    background: var(--green-700);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: inherit;
+  }
+  .signup-form button:hover {
+    background: var(--green-900);
+  }
+  .signup-form .privacy-note {
+    font-size: 12px;
+    color: var(--ink-mute);
+    margin-top: 12px;
+    text-align: center;
+  }
+  .signup-alt {
+    margin-top: 32px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+  }
+  .signup-alt a {
+    color: white;
+    text-decoration: underline;
+  }
+
+  /* ---- Footer ---- */
+  footer {
+    background: var(--green-900);
+    color: rgba(255, 255, 255, 0.75);
+    padding: 40px 0;
+    font-size: 14px;
+  }
+  footer .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  footer a {
+    color: rgba(255, 255, 255, 0.9);
+    margin-left: 20px;
+  }
+  footer a:first-of-type {
+    margin-left: 0;
+  }
+  @media (max-width: 700px) {
+    footer .container {
+      flex-direction: column;
+      text-align: center;
+    }
+    footer a {
+      margin-left: 10px;
+    }
+  }
+
+  /* ---- Success state ---- */
+  .success-msg {
+    display: none;
+    padding: 24px;
+    background: var(--green-50);
+    border: 1px solid var(--green-100);
+    border-radius: 8px;
+    color: var(--green-900);
+    text-align: center;
+    font-weight: 500;
+  }
+  .success-msg.show {
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="logo">🌲 森林記録</div>
+    <nav>
+      <a href="#features">機能</a>
+      <a href="#how">使い方</a>
+      <a href="#pricing">料金</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a href="#signup" class="cta-btn">ベータ登録</a>
+  </div>
+</header>
+
+<main>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="container">
+    <span class="badge">🌲 ベータ版 ベータユーザー募集中</span>
+    <h1>紙とバインダーの林業記録を、<br />ブラウザだけで完結させる。</h1>
+    <p class="lead">
+      立木の本数、作業日誌、間伐計画、GPS トラック、写真記録、PDF 帳票 ―
+      現場で使える林業向け Web アプリ。<br />
+      インストール不要・オフライン対応・個人から事業体まで。
+    </p>
+    <div class="cta-group">
+      <a href="#signup" class="btn-primary">ベータユーザーに登録（無料）</a>
+      <a href="#features" class="btn-secondary">機能を見る →</a>
+    </div>
+    <p class="hero-note">※ Phase 1 は無料ベータ版。正式リリース後も一部機能の無料継続特典つき。</p>
+  </div>
+</section>
+
+<!-- ===== PROBLEM ===== -->
+<section class="alt">
+  <div class="container">
+    <h2>こんな現場、まだありませんか？</h2>
+    <p class="section-lead">
+      林業 DX の掛け声の陰で、小規模な現場ではいまだにアナログ運用が当たり前になっています。
+    </p>
+
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="emoji">📒</div>
+        <h3>紙バインダーで記録</h3>
+        <p>現場で鉛筆で書き、事務所で Excel に手入力。同じ情報を2回書いている。</p>
+      </div>
+      <div class="problem-card">
+        <div class="emoji">📄</div>
+        <h3>帳票の手作りが大変</h3>
+        <p>組合・取引先に出す報告書を、毎回ゼロから Word で作っている。</p>
+      </div>
+      <div class="problem-card">
+        <div class="emoji">💰</div>
+        <h3>既存の業務ソフトは高い</h3>
+        <p>森林 GIS ソフトは導入数百万円。個人事業主や小規模事業体では現実的ではない。</p>
+      </div>
+      <div class="problem-card">
+        <div class="emoji">📵</div>
+        <h3>山は圏外</h3>
+        <p>「クラウドサービスを使いたいけれど、現場は電波がないから無理」。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section id="features">
+  <div class="container">
+    <h2>現場が求める機能を、Web アプリで。</h2>
+    <p class="section-lead">
+      10 年以上の林業現場ヒアリングから生まれた、「使うべき機能だけ」に絞ったシンプルな構成。
+    </p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="icon">🌲</div>
+        <h3>立木カウント</h3>
+        <p>GPS と連動して樹木本数・樹種・直径・樹高を記録。密度や材積も自動計算。</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📋</div>
+        <h3>作業日誌</h3>
+        <p>日々の作業内容・時間・天候を記録。写真も一緒に紐づけられます。</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🪓</div>
+        <h3>間伐計画管理</h3>
+        <p>どの区画をいつ間伐するかをマップで可視化。進捗を自動集計。</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📊</div>
+        <h3>統計ダッシュボード</h3>
+        <p>面積あたり本数、密度、月間作業量を自動で集計。補助金申請にも使える数字に。</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🗺️</div>
+        <h3>地図ベース記録</h3>
+        <p>OSM・国土地理院タイル対応。ポイント・ライン・ポリゴンを現場で直接描画。</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📄</div>
+        <h3>PDF 帳票出力</h3>
+        <p>調査野帳、材積集計表、写真台帳、3 種類の PDF をワンクリックで生成。</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📵</div>
+        <h3>オフライン動作</h3>
+        <p>PWA 設計で、電波の届かない山中でも記録可能。戻ったら自動で同期。</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">☁️</div>
+        <h3>クラウド同期</h3>
+        <p>Supabase ベースの堅牢な同期。複数端末で同じデータを共有。</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">🔒</div>
+        <h3>安全なデータ管理</h3>
+        <p>個人情報は最小限。組合員名簿や森林簿は暗号化してクラウド保存。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section id="how" class="alt">
+  <div class="container">
+    <h2>使い方はかんたん 4 ステップ</h2>
+    <p class="section-lead">インストールもアカウント審査もなし。URL を開いて今すぐ始められます。</p>
+    <div class="steps">
+      <div class="step">
+        <h3>URL を開く</h3>
+        <p>ブラウザで森林記録を開くだけ。スマホ・タブレット・PC すべて対応。</p>
+      </div>
+      <div class="step">
+        <h3>エリアを登録</h3>
+        <p>地図をタップして管理する森林エリアを作成。あとから境界を編集可能。</p>
+      </div>
+      <div class="step">
+        <h3>現場で記録</h3>
+        <p>立木、写真、GPS トラック、作業日誌を現場で入力。オフラインでも OK。</p>
+      </div>
+      <div class="step">
+        <h3>帳票を出力</h3>
+        <p>PDF・CSV・GPX で出力。組合提出や補助金申請の書類作成がラクに。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PRICING ===== -->
+<section id="pricing">
+  <div class="container">
+    <h2>料金プラン</h2>
+    <p class="section-lead">
+      個人から森林組合まで、規模に合わせた 3 プラン。正式版リリース後の予定料金です。
+    </p>
+
+    <div class="pricing-grid">
+      <div class="plan">
+        <h3>Free</h3>
+        <div class="price">¥0<small> / 月</small></div>
+        <p class="target">試用・個人向け</p>
+        <ul>
+          <li>1 ユーザー</li>
+          <li>記録件数 月 100 件まで</li>
+          <li>オフライン・GPS 記録</li>
+          <li>PDF 出力（透かしあり）</li>
+          <li>クラウド同期</li>
+        </ul>
+      </div>
+      <div class="plan popular">
+        <h3>Team</h3>
+        <div class="price">¥3,000<small> 〜 / 月</small></div>
+        <p class="target">小規模事業体・家族経営向け</p>
+        <ul>
+          <li>5 ユーザーまで</li>
+          <li>記録件数 無制限</li>
+          <li>PDF 透かしなし</li>
+          <li>PDF 帳票テンプレート</li>
+          <li>管理者ダッシュボード</li>
+          <li>優先サポート</li>
+        </ul>
+      </div>
+      <div class="plan">
+        <h3>Cooperative</h3>
+        <div class="price">¥10,000<small> 〜 / 月</small></div>
+        <p class="target">森林組合・中規模事業体向け</p>
+        <ul>
+          <li>ユーザー数 応相談</li>
+          <li>組合員・班別管理</li>
+          <li>まとめ帳票生成</li>
+          <li>森林簿インポート</li>
+          <li>導入研修・専任サポート</li>
+          <li>J-クレジット申請サポート（オプション）</li>
+        </ul>
+      </div>
+    </div>
+    <p style="text-align:center; margin-top:32px; font-size:14px; color:var(--ink-mute);">
+      自治体・大規模事業者向けは別途ご相談ください。
+    </p>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section id="faq" class="alt">
+  <div class="container">
+    <h2>よくある質問</h2>
+    <div class="faq-list">
+      <details>
+        <summary>現場で電波がなくても使えますか？</summary>
+        <p>はい。初回ログイン後はアプリ本体・地図タイル・記録データがブラウザにキャッシュされ、オフラインで動作します。電波が戻ったタイミングで自動的にクラウドへ同期されます。</p>
+      </details>
+      <details>
+        <summary>スマホにインストールする必要はありますか？</summary>
+        <p>不要です。URL をブラウザで開くだけで使えます。ホーム画面に追加すればアプリのようにワンタップで起動できます（PWA 対応）。</p>
+      </details>
+      <details>
+        <summary>データはどこに保管されますか？</summary>
+        <p>ユーザー操作時は端末のブラウザストレージ（IndexedDB）に、同期時には Supabase（Postgres）の暗号化されたクラウドに保管されます。データのエクスポート・削除はいつでも可能です。</p>
+      </details>
+      <details>
+        <summary>iPhone でも使えますか？</summary>
+        <p>使えます。Safari で URL を開いてください。「ホーム画面に追加」でアプリのように利用可能です。※ 長時間のバックグラウンド GPS トラッキングはブラウザの仕様で制限があります。</p>
+      </details>
+      <details>
+        <summary>既存の森林簿や作業データを読み込めますか？</summary>
+        <p>Phase 3（6 ヶ月以降）で CSV・SHP・KML のインポート機能を実装予定です。ベータ期間中は個別対応も相談ください。</p>
+      </details>
+      <details>
+        <summary>Android アプリ版はないのですか？</summary>
+        <p>以前は Android アプリとして開発していましたが、Google Play の要件と個人開発の持続可能性を考慮し、Web PWA 版を主軸に据える方針に転換しました。詳細は <a href="https://note.com/">note の記事</a> をご覧ください。既存の Android β テスターの方には別途ご案内します。</p>
+      </details>
+      <details>
+        <summary>個人開発とのことで不安があります。継続性は？</summary>
+        <p>正直にお答えすると、現時点では副業として個人で開発・運営しています。そのため、Supabase のクラウドインフラや定期的なデータエクスポートを通じて、仮にサービスが停止してもデータを失わない設計にしています。将来的にはチーム体制や法人化も検討中です。</p>
+      </details>
+      <details>
+        <summary>J-クレジットの申請サポートとは？</summary>
+        <p>森林由来 J-クレジットの申請には、境界・施業履歴・モニタリングデータの整備が必要です。森林記録で蓄積したデータを元に申請書類の下書きを自動生成し、小規模林家でも J-クレジットを活用できる仕組みを Phase 3 以降で提供予定です。</p>
+      </details>
+      <details>
+        <summary>英語・中国語など多言語対応はありますか？</summary>
+        <p>現在は日本語のみ対応です。多言語対応は Phase 4（12 ヶ月以降）を予定しています。ご要望のある方はベータ登録時にお知らせください。</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SIGNUP ===== -->
+<section id="signup" class="signup">
+  <div class="container">
+    <h2>ベータ版、一緒に作りませんか？</h2>
+    <p class="section-lead">
+      ベータユーザーにご登録いただいた方には、公開時に URL と初期設定ガイドをお送りします。<br />
+      機能リクエストの優先反映、正式版リリース後の特典もご用意しています。
+    </p>
+    <form class="signup-form" id="signupForm" onsubmit="return handleSignup(event)">
+      <label for="email">Gmail アドレス *</label>
+      <input type="email" id="email" name="email" required placeholder="yourname@gmail.com" />
+
+      <label for="role">あなたの立場 *</label>
+      <select id="role" name="role" required>
+        <option value="">選択してください</option>
+        <option value="self-logger">自伐林家・個人森林所有者</option>
+        <option value="small-biz">小規模林業事業体（家族経営など）</option>
+        <option value="cooperative">森林組合 職員</option>
+        <option value="municipality">自治体 林務課</option>
+        <option value="developer">個人開発者（相互テスト希望）</option>
+        <option value="other">その他</option>
+      </select>
+
+      <label for="message">ひとこと（任意）</label>
+      <textarea id="message" name="message" placeholder="現場の規模、困っていること、期待する機能など"></textarea>
+
+      <button type="submit">メールで送信する</button>
+      <p class="privacy-note">
+        Gmail アドレスは招待リストのみに使用し、第三者に提供しません。
+      </p>
+    </form>
+
+    <div class="success-msg" id="successMsg">
+      ✅ メールアプリが開きました。送信してください。<br />
+      数日以内にベータ招待情報をお送りします。
+    </div>
+
+    <p class="signup-alt">
+      メーラーが起動しない場合、直接 <a href="mailto:i007955@gmail.com?subject=森林記録%20ベータ参加希望">i007955＠gmail.com</a>
+      までご連絡ください。<br />
+      （スパム対策のため全角＠表記。半角に直してご送信ください）
+    </p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="container">
+    <div>© 2026 森林記録 / 個人開発（Yuji）</div>
+    <nav>
+      <a href="#faq">FAQ</a>
+      <a href="/privacy">プライバシーポリシー</a>
+      <a href="/terms">利用規約</a>
+      <a href="mailto:i007955@gmail.com">お問い合わせ</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+  function handleSignup(ev) {
+    ev.preventDefault();
+    const email = document.getElementById("email").value.trim();
+    const role = document.getElementById("role").value;
+    const message = document.getElementById("message").value.trim();
+
+    const roleLabels = {
+      "self-logger": "自伐林家・個人森林所有者",
+      "small-biz": "小規模林業事業体",
+      "cooperative": "森林組合職員",
+      "municipality": "自治体林務課",
+      "developer": "個人開発者",
+      "other": "その他",
+    };
+
+    const subject = "森林記録 ベータ参加希望";
+    const body =
+      "森林記録のベータ版参加を希望します。\n\n" +
+      "■ Gmail: " + email + "\n" +
+      "■ 立場: " + (roleLabels[role] || role) + "\n" +
+      "■ ひとこと: " + (message || "（なし）") + "\n\n" +
+      "よろしくお願いします。";
+
+    const mailto =
+      "mailto:i007955@gmail.com" +
+      "?subject=" + encodeURIComponent(subject) +
+      "&body=" + encodeURIComponent(body);
+
+    window.location.href = mailto;
+
+    document.getElementById("signupForm").style.display = "none";
+    document.getElementById("successMsg").classList.add("show");
+    return false;
+  }
+</script>
+
+</body>
+</html>
