@@ -26,7 +26,7 @@ Cloudflare Pages に接続する場合:
 
 ## 登録フォーム
 
-`mailto:` で i007955@gmail.com に届く仕様。
+`mailto:` で shinrin.app@gmail.com に届く仕様。
 将来的に Formspree 等への差し替えを想定。
 
 ## 関連
